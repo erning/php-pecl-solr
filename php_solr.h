@@ -511,6 +511,7 @@ int solr_curl_debug_callback(CURL *curl_handle, curl_infotype infotype, solr_cha
 PHP_SOLR_API int solr_init_options(solr_client_options_t *options TSRMLS_DC);
 PHP_SOLR_API int solr_init_handle(solr_curl_t *sch, solr_client_options_t *options TSRMLS_DC);
 PHP_SOLR_API int solr_make_request(solr_client_t *client, solr_request_type_t request_type TSRMLS_DC);
+PHP_SOLR_API int solr_make_request_ex(solr_client_t *client, solr_request_type_t request_type, char *fragment, int fragment_len TSRMLS_DC);
 PHP_SOLR_API void solr_free_handle(solr_curl_t *sch);
 PHP_SOLR_API void solr_free_option(solr_client_options_t *options);
 

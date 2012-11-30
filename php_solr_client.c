@@ -619,7 +619,7 @@ PHP_METHOD(SolrClient, setServlet)
 
 // client->handle.err.str client->handle.request_body_debug.buffer.str
 
-/* {{{ proto SolrQueryResponse SolrClient::query(SolrParams query)
+/* {{{ proto SolrQueryResponse SolrClient::query(SolrParams query, string fragment=NULL)
    Sends a name-value pair request to the Solr server. */
 PHP_METHOD(SolrClient, query)
 {
@@ -632,6 +632,9 @@ PHP_METHOD(SolrClient, query)
 	zend_bool success = 1;
 	solr_request_type_t solr_request_type = SOLR_REQUEST_SEARCH;
 
+	char *fragment = NULL;
+	int fragment_len = 0;
+
 	if (!return_value_used)
 	{
 		php_error_docref(NULL TSRMLS_CC, E_NOTICE, "Return value requested but output not processed.");
@@ -640,7 +643,7 @@ PHP_METHOD(SolrClient, query)
 	}
 
 	/* Process the parameters passed to the default constructor */
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "O", &solr_params_obj, solr_ce_SolrParams) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "O|s", &solr_params_obj, solr_ce_SolrParams, &fragment, &fragment_len) == FAILURE) {
 
 		solr_throw_exception_ex(solr_ce_SolrIllegalArgumentException, SOLR_ERROR_4000 TSRMLS_CC, SOLR_FILE_LINE_FUNC, SOLR_ERROR_4000_MSG);
 
@@ -701,7 +704,7 @@ PHP_METHOD(SolrClient, query)
 	}
 
 	/* Make the HTTP request to the Solr instance */
-	if (solr_make_request(client, solr_request_type TSRMLS_CC) == FAILURE)
+	if (solr_make_request_ex(client, solr_request_type, fragment, fragment_len TSRMLS_CC) == FAILURE)
 	{
 		success = 0;
 

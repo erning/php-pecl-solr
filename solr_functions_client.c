@@ -313,6 +313,11 @@ int solr_curl_debug_callback(CURL *curl_handle, curl_infotype infotype, solr_cha
 /* {{{ PHP_SOLR_API int solr_make_request(solr_client_t *client, solr_request_type_t request_type TSRMLS_DC) */
 PHP_SOLR_API int solr_make_request(solr_client_t *client, solr_request_type_t request_type TSRMLS_DC)
 {
+	return solr_make_request_ex(client, request_type, 0, 0);
+}
+
+PHP_SOLR_API int solr_make_request_ex(solr_client_t *client, solr_request_type_t request_type, char *fragment, int fragment_len TSRMLS_DC)
+{
 	solr_curl_t *sch = &(client->handle);
 	solr_client_options_t *options = &(client->options);
 	solr_http_header_list_t *header_list = NULL;
@@ -352,30 +357,39 @@ PHP_SOLR_API int solr_make_request(solr_client_t *client, solr_request_type_t re
 	{
 		case SOLR_REQUEST_SEARCH :
 		{
+			solr_string_t url;
+			solr_string_init(&url);
+
 			if (options->query_method == 'G') {
 				/* HTTP GET */
-				solr_string_t url;
-				solr_string_init(&url);
+				curl_easy_setopt(sch->curl_handle, CURLOPT_HTTPGET, 1L);
+
 				solr_string_appends(&url, options->search_url.str, options->search_url.len);
 				solr_string_appends(&url, options->qs_delimiter.str, options->qs_delimiter.len);
 				solr_string_appends(&url, sch->request_body.buffer.str, sch->request_body.buffer.len);
-
-				curl_easy_setopt(sch->curl_handle, CURLOPT_HTTPGET, 1L);
-				curl_easy_setopt(sch->curl_handle, CURLOPT_URL, url.str);
-				curl_easy_setopt(sch->curl_handle, CURLOPT_HTTPHEADER, header_list);
-
-				solr_string_free(&url);
 			} else {
 				/* HTTP FORM POST */
-				header_list = curl_slist_append(header_list, "Content-Type: application/x-www-form-urlencoded;charset=UTF-8");
-
 				curl_easy_setopt(sch->curl_handle, CURLOPT_POST,    1L);
-
-				curl_easy_setopt(sch->curl_handle, CURLOPT_URL, options->search_url.str);
-				curl_easy_setopt(sch->curl_handle, CURLOPT_HTTPHEADER, header_list);
 				curl_easy_setopt(sch->curl_handle, CURLOPT_POSTFIELDSIZE, sch->request_body.buffer.len);
 				curl_easy_setopt(sch->curl_handle, CURLOPT_POSTFIELDS, sch->request_body.buffer.str);				
+
+				header_list = curl_slist_append(header_list, "Content-Type: application/x-www-form-urlencoded;charset=UTF-8");
+
+				solr_string_appends(&url, options->search_url.str, options->search_url.len);
 			}
+
+			if (fragment) {
+				int encoded_fragment_len;
+				char *encoded_fragment = php_raw_url_encode(fragment, fragment_len, &encoded_fragment_len);
+				solr_string_appendc(&url, '#');
+				solr_string_appends(&url, encoded_fragment, encoded_fragment_len);
+				efree(encoded_fragment);
+			}
+
+			curl_easy_setopt(sch->curl_handle, CURLOPT_HTTPHEADER, header_list);
+			curl_easy_setopt(sch->curl_handle, CURLOPT_URL, url.str);
+
+			solr_string_free(&url);
 		}
 		break;
 
