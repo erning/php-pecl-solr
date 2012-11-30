@@ -223,6 +223,8 @@ typedef struct {
 
 	solr_string_t terms_servlet;			/* The terms servlet */
 
+	char query_method;						/* The prefer http method of solr query request. 'G' for GET or 'P' for POST */
+
 } solr_client_options_t;
 
 typedef struct {

@@ -474,6 +474,14 @@ PHP_METHOD(SolrClient, __construct)
 		solr_string_appends(&(client_options->proxy_auth_credentials), Z_STRVAL_PP(tmp2), Z_STRLEN_PP(tmp2));
 	}
 
+	if (zend_hash_find(options_ht, "query_method", sizeof("query_method"),
+			(void**) &tmp1) == SUCCESS && Z_TYPE_PP(tmp1) == IS_STRING
+			&& strncmp(Z_STRVAL_PP(tmp1), "GET", 3) == 0) {
+		client_options->query_method = 'G';
+	} else {
+		client_options->query_method = 'P';
+	}
+
 	solr_init_handle(handle, client_options TSRMLS_CC);
 
 	SOLR_GLOBAL(client_count)++;
@@ -1807,6 +1815,12 @@ PHP_METHOD(SolrClient, getOptions)
 	add_assoc_stringl(return_value, "ssl_keypassword", options->ssl_keypassword.str, options->ssl_keypassword.len, 1);
 	add_assoc_stringl(return_value, "ssl_cainfo", options->ssl_cainfo.str, options->ssl_cainfo.len, 1);
 	add_assoc_stringl(return_value, "ssl_capath", options->ssl_capath.str, options->ssl_capath.len, 1);
+
+	if (options->query_method == 'G') {
+		add_assoc_stringl(return_value, "query_method", "GET", 3, 1);
+	} else {
+		add_assoc_stringl(return_value, "query_method", "POST", 4, 1);
+	}
 }
 /* }}} */
 
