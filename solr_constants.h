@@ -71,7 +71,6 @@
 
 /* {{{ Informational constants */
 #define PHP_SOLR_EXTENSION_NAME   "solr"
-#define PHP_CURL_EXTENSION_NAME   "curl"
 #define PHP_LIBXML_EXTENSION_NAME "libxml"
 
 /* }}} */
